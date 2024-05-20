@@ -40,6 +40,10 @@ struct ContentView: View {
     @State private var score = 0
     @State private var questionCount = 0
     
+    @State private var selectedAnswer = -1
+    @State private var animationRotationAmount = 0.0
+    @State private var animationOpacity = 1.0
+    
     var body: some View {
         
         ZStack {
@@ -77,6 +81,8 @@ struct ContentView: View {
 //                                .clipShape(.rect(cornerRadius: 10))
 //                                .shadow(radius: 10)
                         }
+                        .rotation3DEffect(.degrees(selectedAnswer == number ? animationRotationAmount : 0), axis: (x: 0.0, y: 1.0, z: 0.0))
+                        .opacity( !(selectedAnswer == number) ? animationOpacity : 1)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -143,6 +149,7 @@ struct ContentView: View {
     }
     
     func flagTapped(_ number: Int) {
+        selectedAnswer = number
         if number == correctAnswer {
             scoreTitle = "Correct!"
             score += 1
@@ -150,17 +157,26 @@ struct ContentView: View {
             scoreTitle = "Wrong!"
         }
         
+        withAnimation {
+            animationRotationAmount += 360
+            animationOpacity = 0.25
+        }
+        
         questionCount += 1
-        if questionCount == 8 {
-            displayGameOverAlert = true
-        } else {
-            displayScoreAlert = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            if questionCount == 8 {
+                displayGameOverAlert = true
+            } else {
+                displayScoreAlert = true
+            }
         }
     }
     
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        selectedAnswer = -1
+        animationOpacity = 1.0
     }
     
     func resetQuiz() {
